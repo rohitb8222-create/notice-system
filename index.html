@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sumeet Elko Notice System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        /* मोबाईलसाठी खास डिझाइन */
+        body { font-family: Arial, sans-serif; padding: 15px; background: #f4f7f6; }
+        .form-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 450px; margin: auto; }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        
+        /* प्रिंटसाठी फॉरमॅट */
+        #print-area { display: none; padding: 30px; line-height: 1.6; color: black; }
+        @media print {
+            .form-box, h2 { display: none; }
+            #print-area { display: block; }
+        }
+    </style>
+</head>
+<body onload="init()">
+
+<div class="form-box">
+    <h3 style="text-align:center; color:#004d99;">सुमित एल्कोप्लास्ट नोटीस</h3>
+    <p id="status" style="font-size:12px; text-align:center; color:blue;">डेटा लोड होत आहे...</p>
+    
+    <label>तिकीट नंबर टाका:</label>
+    <input type="number" id="empID" placeholder="उदा. 1" oninput="findEmp()">
+    
+    <input type="text" id="dispName" placeholder="पूर्ण नाव" readonly style="background:#eee;">
+    <input type="text" id="dispDesig" placeholder="हुद्दा (Designation)" readonly style="background:#eee;">
+    
+    <label>गैरवर्तणूकीचे कारण:</label>
+    <textarea id="reason" rows="3" placeholder="उदा. कामावर झोपलात..."></textarea>
+    
+    <input type="text" id="shift" placeholder="शिफ्ट / तारीख">
+    
+    <button onclick="window.print()">PDF तयार करा / प्रिंट काढा</button>
+</div>
+
+<div id="print-area">
+    <center><h2>सुमित एल्कोप्लास्ट कल्याण एम एस डब्लू प्रा. लि.</h2><hr></center>
+    <h3 style="text-align:center; text-decoration:underline;">सक्त ताकीद पत्र</h3>
+    <p style="text-align:right;">दिनांक: <span id="outDate"></span></p>
+    <p><strong>प्रती :</strong> <span id="outName"></span><br>
+    <strong>हुद्दा :</strong> <span id="outDesig"></span><br>
+    <strong>तिकीट नंबर :</strong> <span id="outID"></span></p>
+    
+    <p>आपण शिफ्ट <strong><span id="outShift"></span></strong> मध्ये असताना खालील कृत्य केले आहे:<br>
+    <strong>- <span id="outReason"></span></strong><br><br>
+    हे कृत्य गैरवर्तणूकीत मोडते. व्यवस्थापन आपणास सुधारण्याची संधी देत असून ही <strong>सक्त ताकीद</strong> देत आहे.</p>
+    
+    <div style="margin-top:50px; display:flex; justify-content:space-between;">
+        <span>यूनिट ऑफिसर</span>
+        <span>सहायक व्यवस्थापक (ऑपरेशन्स)</span>
+    </div>
+    <p style="font-size:10px; border-top:1px dashed #000; margin-top:30px; padding-top:10px;">
+        नोट : सदर ताकीदपत्र संबंधित स्वीपर/हेल्पर/ड्रायवरच्या व्हॉटसअॅपवर पाठवावे.
+    </p>
+</div>
+
+<script>
+    let masterData = [];
+    const sheetCSV = "तुमची_CSV_लिंक_येथे_पेस्ट_करा"; // स्टेप १ मधील लिंक येथे टाका
+
+    function init() {
+        Papa.parse(sheetCSV, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                masterData = results.data;
+                document.getElementById('status').innerText = "डेटा ऑनलाइन आहे ✅";
+            }
+        });
+    }
+
+    function findEmp() {
+        const id = document.getElementById('empID').value;
+        const emp = masterData.find(r => r['EMP CODE'] == id);
+        if(emp) {
+            document.getElementById('dispName').value = emp['FULL_NAME'] || emp['FULL NAME'];
+            document.getElementById('dispDesig').value = emp['DESIGNATION'];
+            
+            // फॉर प्रिंट
+            document.getElementById('outName').innerText = document.getElementById('dispName').value;
+            document.getElementById('outDesig').innerText = emp['DESIGNATION'];
+            document.getElementById('outID').innerText = id;
+            document.getElementById('outDate').innerText = new Date().toLocaleDateString('mr-IN');
+        }
+    }
+
+    // प्रिंट करण्यापूर्वी व्हॅल्यूज अपडेट करणे
+    window.onbeforeprint = function() {
+        document.getElementById('outReason').innerText = document.getElementById('reason').value;
+        document.getElementById('outShift').innerText = document.getElementById('shift').value;
+    };
+</script>
+</body>
+</html>
